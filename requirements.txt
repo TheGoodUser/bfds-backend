@@ -1,0 +1,6 @@
+secure-smtplib
+fastapi
+colorama
+python-jose
+python-dotenv
+sendgrid
