@@ -108,7 +108,7 @@ async def login(response: Response, request: Request):
             value=token,
             httponly=True,
             secure=True, # make it Fale while development
-            samesite="Lax",
+            samesite="none",
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     
