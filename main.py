@@ -107,7 +107,7 @@ async def login(response: Response, request: Request):
             key="access_token",
             value=token,
             httponly=True,
-            secure=False, # make it True when deployed
+            secure=True, # make it True when deployed
             samesite="Lax",
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES
         )
