@@ -52,7 +52,10 @@ demo_user = {
 # Monitoring Instances
 # Brute Force Detector
 start_time: datetime = datetime.now()
-brute_force_detector: BruteForceDetector = BruteForceDetector(start_time=start_time, blocked_ips=blocked_ips)
+brute_force_detector = BruteForceDetector(
+    start_time = start_time, 
+    blocked_ips = blocked_ips
+)
 
 
 # Create JWT
@@ -125,8 +128,8 @@ def logout(response: Response):
     response.delete_cookie(
         key="access_token",
         path="/",
-        samesite="Lax",
-        secure=False
+        samesite="none",
+        secure=True
     )
     return {
         'message': "Logged out successfully",
