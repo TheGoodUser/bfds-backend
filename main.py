@@ -1,14 +1,25 @@
 from http.server import BaseHTTPRequestHandler
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, Cookie # type: ignore
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse # type: ignore
 from jose import JWTError, jwt #type: ignore
 from datetime import datetime, timedelta
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware # type: ignore
+from dotenv import load_dotenv # type: ignore
 
-from models.user_model import UserModel
+import os
+
+from functions.jwt_generation import CreateAccessToken
+from functions.get_current_user import CurrentUser
+
+from models import UserModel
 from monitoring.attacks.brute_force.brute_force_detector import BruteForceDetector
 
-app = FastAPI()
+# load dotenv
+load_dotenv()
+
+# Determine if the environment is production
+is_prod_env = os.getenv("IS_PRODUCTION", "False").lower()
+is_prod: bool = True if is_prod_env in ("true", "1", "yes") else False
 
 # Exception list
 # All the blocked IP address are stored here
@@ -37,11 +48,15 @@ class DynamicCORS(BaseHTTPMiddleware):
             # if origin not in blocked_ips:
         return response
 
+# App Instance
+app = FastAPI()
+
 app.add_middleware(DynamicCORS)
 
-SECRET_KEY="Hello World"
-ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=60*24
+SECRET_KEY = "Hello World"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60*24
+
 
 demo_user = {
     'email': 'ram19870101@gmail.com',
@@ -57,34 +72,29 @@ brute_force_detector = BruteForceDetector(
     blocked_ips = blocked_ips
 )
 
+# Current User Details
+currentUser = CurrentUser(
+    SECRET_KEY = SECRET_KEY, 
+    ALOGORITHM = ALGORITHM
+)
 
-# Create JWT
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
- 
-     
+
+'''
+All the API endpoints are defined form here on
+'''
+
 # root
 @app.get("/")
 def welcome():
     return {'message': "Welcome User"}        
 
-# IP
-@app.get("/server-ip")
-def server_ip():
-    import socket
-    hostname = socket.gethostname()
-    ip = socket.gethostbyname(hostname)
-    return {"server_ip": ip}
 
 # login
 @app.post("/login")
 async def login(response: Response, request: Request):
     
-    # start the detector
-    brute_force_detector.startDaemon(host_ip_add=request.client.host)
+    # start the auth monitoring
+    brute_force_detector.start_daemon(host_ip_add = request.client.host)
     
     # get the data
     data = await request.form()
@@ -95,23 +105,26 @@ async def login(response: Response, request: Request):
         raise Exception('Conversion Failed: Invalid request form format')
     
     # pass converted data to classmodel `UserModel`
-    user_cred: UserModel = UserModel.from_json(data)
-
+    userCred: UserModel = UserModel.from_json(data)
 
     # verify
-    if user_cred.email != demo_user['email'] or user_cred.password != demo_user['password']:
-        print("     [LOG]: Invalid credentials")
+    if userCred.email != demo_user['email'] or userCred.password != demo_user['password']:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     else:
-    # generate the token
-        token:str = create_access_token({"sub": user_cred.email}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        # generate the token
+        token = CreateAccessToken(
+            data = {"sub": userCred.email},
+            expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+            secret_key = SECRET_KEY,
+            algorithm = ALGORITHM,
+        )
         
         response.set_cookie(
             key="access_token",
             value=token,
             httponly=True,
-            secure=True, # make it Fale while development
-            samesite="none",
+            secure=is_prod,
+            samesite="none", # to allow cross-site requests
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     
@@ -128,33 +141,19 @@ def logout(response: Response):
     response.delete_cookie(
         key="access_token",
         path="/",
-        samesite="none",
-        secure=True # convert this to False in development
+        samesite="none", # to allow cross-site requests
+        secure=is_prod # False while development
     )
     return {
         'message': "Logged out successfully",
         'ok': True,
         'status_code': 200
     }
-    
-    
-# Dependency: Get current user from cookie
-def get_current_user(access_token: str = Cookie(None)):
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Not Authenticated")
-    try:
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_cod=401, detail="Invalid token")
-        return email
-    except JWTError:
-        raise HTTPException(status_code=403, detail="Token verification failed")
-
+  
 
 # protected route
 @app.get("/protected")
-def protected_route(user: str = Depends(get_current_user)):
+def protected_route(user: str = Depends(currentUser.get_details)):
     return {
         'ok': True,
         'status_code': 200,

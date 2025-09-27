@@ -3,7 +3,7 @@ import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-from backend_enum.attack_types import AttackType
+from enums import AttackType
 
 dotenv.load_dotenv()
 
