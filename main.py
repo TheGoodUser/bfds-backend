@@ -129,7 +129,7 @@ def logout(response: Response):
         key="access_token",
         path="/",
         samesite="none",
-        secure=True
+        secure=True # convert this to False in development
     )
     return {
         'message': "Logged out successfully",
