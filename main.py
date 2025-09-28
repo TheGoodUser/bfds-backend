@@ -89,7 +89,7 @@ def welcome(request: Request):
     try:
         is_cron_job = request.headers.get("amicronjob")
         if is_cron_job is not None:
-            message = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}] [CRON JOB CALL REQUESTED]"
+            message = "      [CRON JOB CALL REQUESTED]"
             print(message)     
     except:
         pass
