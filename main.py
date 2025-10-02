@@ -147,7 +147,8 @@ async def login(response: Response, request: Request):
             value=token,
             httponly=True,
             secure=is_prod,
-            samesite="lax", # to allow cross-site requests
+            samesite="none", # to allow cross-site requests,
+            domain=None,
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     
