@@ -101,6 +101,22 @@ def welcome(request: Request):
 async def login(response: Response, request: Request):
     
     # start the auth monitoring
+    """
+    Authenticate a user from form data and set an HTTP-only access_token cookie on successful login.
+    
+    Parses form data from the incoming request, verifies credentials against a demo user, issues a JWT access token, and attaches it as a cookie on the provided response.
+    
+    Parameters:
+        response (Response): The response object used to set the access_token cookie.
+        request (Request): The incoming request containing form data and client IP.
+    
+    Returns:
+        dict: A success payload containing 'message', 'ok', and 'status_code' indicating login succeeded.
+    
+    Raises:
+        Exception: If form data cannot be converted to a dict (message: 'Conversion Failed: Invalid request form format').
+        HTTPException: With status_code 401 and detail "Invalid credentials" if authentication fails.
+    """
     brute_force_detector.start_daemon(host_ip_add = request.client.host)
     
     # get the data
@@ -131,7 +147,7 @@ async def login(response: Response, request: Request):
             value=token,
             httponly=True,
             secure=is_prod,
-            samesite="none", # to allow cross-site requests
+            samesite="lax", # to allow cross-site requests
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     
