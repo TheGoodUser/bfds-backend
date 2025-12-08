@@ -8,7 +8,7 @@
     </a>
 </p>
 
-- <q><b>The backend deployed on free tier heroku so you could see a cold start</b> </q>
+- <q><b>The backend deployed on free tier render so you could see a cold start</b> </q>
 
 <br>
 <br>
