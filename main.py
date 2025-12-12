@@ -56,7 +56,7 @@ app.add_middleware(DynamicCORS)
 
 SECRET_KEY = "Hello World"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 
 demo_user = {"email": "ram19870101@gmail.com", "password": "Test@123"}
@@ -147,7 +147,7 @@ async def login(response: Response, request: Request):
             secure=is_prod,
             samesite="none",  # to allow cross-site requests,
             domain=None,
-            max_age=ACCESS_TOKEN_EXPIRE_MINUTES,
+            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
 
         return {"message": "Login Successful", "ok": True, "status_code": 200}
