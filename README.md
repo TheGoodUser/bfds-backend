@@ -13,6 +13,7 @@
 <br>
 <br>
 
+
 A small FastAPI backend that demonstrates a brute-force login detector, cookie-based JWT authentication, and an alerting daemon scaffold. It can be used as a learning/demo service for detecting repeated failed login attempts and blocking offending IPs.
 
 Also:
