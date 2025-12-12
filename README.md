@@ -15,6 +15,9 @@
 
 A small FastAPI backend that demonstrates a brute-force login detector, cookie-based JWT authentication, and an alerting daemon scaffold. It can be used as a learning/demo service for detecting repeated failed login attempts and blocking offending IPs.
 
+Also:
+    - https://github.com/TheGoodUser/brute-force
+
 Key points:
 
 - FastAPI app serving login/logout/protected endpoints
